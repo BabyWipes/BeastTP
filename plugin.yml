@@ -1,0 +1,16 @@
+name: BeastTP
+main: code.husky.BeastTP
+version: 2.1
+commands:
+        to:
+           description: Tp's Sender to Target
+        from:
+           description: Tp's Target to Sender
+        tos:
+           description: Tp's Target to Sender Silent
+        froms:
+           description: Tp's Target to Sender Silent
+        tpon:
+           description: Disable tp
+        tpoff:
+           description: Disable tp           
