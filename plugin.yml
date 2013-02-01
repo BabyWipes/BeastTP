@@ -6,11 +6,11 @@ commands:
            description: Tp's Sender to Target
         from:
            description: Tp's Target to Sender
-        tos:
+        sto:
            description: Tp's Target to Sender Silent
-        froms:
+        sfrom:
            description: Tp's Target to Sender Silent
-        tpon:
+        dto:
            description: Disable tp
-        tpoff:
+        dfrom:
            description: Disable tp           
