@@ -1,145 +1,143 @@
 package code.husky;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class BeastTP extends JavaPlugin
 {
-  BeastTP plugin;
-  Logger log = Logger.getLogger("Minecraft");
+  private static final Logger log = Logger.getLogger("Minecraft");
+  List<String> toc = new ArrayList<String>();
+  List<String> fromc = new ArrayList<String>();
 
   public void onEnable() {
-    this.log.info("BeastTP has been Enabled");
+    log.info("[BeastTP] Enabled.");
   }
 
   public void onDisable() {
-    this.log.info("BeastTP has been Diabled");
+    log.info("[BeastTP] DISABLED!");
   }
 
-  public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-    Player p = (Player)sender;
-    if (cmd.getName().equalsIgnoreCase("to")) {
-      if ((p.hasPermission("BeastTP.to")) || (p.hasPermission("BeastTP.*"))) {
-        if (args.length == 0) {
-          p.sendMessage(ChatColor.RED + "Usage: /to [Player]");
-        } else if (args.length == 1) {
-          Player checkee = getServer().getPlayerExact(args[0]);
-          if (checkToggle(checkee) == "No") {
-            p.sendMessage(ChatColor.RED + "This player has teleportation disabled!");
+  public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
+  {
+    Player s = (Player)sender;
+    if (commandLabel.equalsIgnoreCase("to")) {
+      if (!canGoTo((Player)sender)) {
+        sender.sendMessage(ChatColor.RED + "You are not allowed to use this BeastTP function!");
+        return true;
+      }
+
+      for (Player p : getServer().getOnlinePlayers()) {
+        if ((p.getName().toLowerCase().contains(args[0].toLowerCase())) || (p.getDisplayName().toLowerCase().contains(args[0].toLowerCase()))) {
+          if (!this.toc.contains(p.getName())) {
+            Teleport((Player)sender, p);
+            sender.sendMessage(ChatColor.GREEN + "Successfully teleported to " + p.getDisplayName());
+            teleportedMessage(p, (Player)sender, true);
           } else {
-            Player top = p.getServer().getPlayer(args[0]);
-            p.teleport(top);
-            p.sendMessage(ChatColor.GREEN + "Teleported to " + ChatColor.DARK_RED + top.getName() + ChatColor.GREEN + "!");
-            top.sendMessage(ChatColor.DARK_RED + p.getName() + ChatColor.GREEN + " teleported to you!");
+            s.sendMessage(ChatColor.RED + "You're not able to TP to " + p.getName() + " because they disabled their TP!");
           }
+          return true;
         }
       }
-      else NoPerm(p);
-    }
-    else if (cmd.getName().equalsIgnoreCase("tos")) {
-      if ((p.hasPermission("BeastTP.tos")) || (p.hasPermission("BeastTP.*"))) {
-        if (args.length == 0) {
-          p.sendMessage(ChatColor.RED + "Usage: /tos [Player]");
-        } else if (args.length == 1) {
-          Player checkee = getServer().getPlayerExact(args[0]);
-          if (checkToggle(checkee) == "No") {
-            p.sendMessage(ChatColor.RED + "This player has teleportation disabled!");
+
+      sender.sendMessage(ChatColor.RED + "Couldn't find target for " + args[0]);
+      return true;
+    }if (commandLabel.equalsIgnoreCase("from")) {
+      if (!canFrom((Player)sender)) {
+        sender.sendMessage(ChatColor.RED + "You are not allowed to use this BeastTP function!");
+        return true;
+      }
+
+      for (Player p : getServer().getOnlinePlayers()) {
+        if ((p.getName().toLowerCase().contains(args[0].toLowerCase())) || (p.getDisplayName().toLowerCase().contains(args[0].toLowerCase()))) {
+          if (!this.fromc.contains(p.getName())) {
+            Teleport(p, (Player)sender);
+            sender.sendMessage(ChatColor.GREEN + "Successfully teleported " + p.getDisplayName() + " to you");
+            teleportedMessage(p, (Player)sender, false);
           } else {
-            Player top = p.getServer().getPlayer(args[0]);
-            p.teleport(top);
-            p.sendMessage(ChatColor.GREEN + "Teleported to " + ChatColor.DARK_RED + top.getName() + ChatColor.GREEN + "!");
+            s.sendMessage(ChatColor.RED + "You're not able to TP " + p.getName() + " to you because they disabled their TP!");
           }
+          return true;
         }
       }
-      else NoPerm(p);
-    }
-    else if (cmd.getName().equalsIgnoreCase("from")) {
-      if ((p.hasPermission("BeastTP.from")) || (p.hasPermission("BeastTP.*"))) {
-        if (args.length == 0) {
-          p.sendMessage(ChatColor.RED + "Usage: /from [Player]");
-        } else if (args.length == 1) {
-          Player checkee = getServer().getPlayerExact(args[0]);
-          if (checkToggle(checkee) == "No") {
-            p.sendMessage(ChatColor.RED + "This player has teleportation disabled!");
+
+      sender.sendMessage(ChatColor.RED + "Couldn't find target for " + args[0]);
+      return true;
+    }if (commandLabel.equalsIgnoreCase("dfrom")) {
+      this.fromc.add(s.getName());
+      s.sendMessage(ChatColor.GREEN + "Disabled people TP'ing you to them!");
+      return true;
+    }if (commandLabel.equalsIgnoreCase("dto")) {
+      this.toc.add(s.getName());
+      s.sendMessage(ChatColor.GREEN + "Disabled people TP'ing to you!");
+      return true;
+    }if (commandLabel.equalsIgnoreCase("sto")) {
+      if (!canGoTo((Player)sender)) {
+        sender.sendMessage(ChatColor.RED + "You are not allowed to use this BeastTP function!");
+        return true;
+      }
+
+      for (Player p : getServer().getOnlinePlayers()) {
+        if ((p.getName().toLowerCase().contains(args[0].toLowerCase())) || (p.getDisplayName().toLowerCase().contains(args[0].toLowerCase()))) {
+          if (!this.toc.contains(p.getName())) {
+            Teleport((Player)sender, p);
+            sender.sendMessage(ChatColor.GREEN + "Successfully teleported to " + p.getDisplayName());
           } else {
-            Player fromp = p.getServer().getPlayer(args[0]);
-            fromp.teleport(p);
-            p.sendMessage(ChatColor.GREEN + "Teleported " + ChatColor.DARK_RED + fromp.getName() + ChatColor.GREEN + "to you!");
-            fromp.sendMessage(ChatColor.DARK_RED + p.getName() + ChatColor.GREEN + " teleported you to them!");
+            s.sendMessage(ChatColor.RED + "You're not able to TP to " + p.getName() + " because they disabled their TP!");
           }
+          return true;
         }
       }
-      else NoPerm(p);
-    }
-    else if (cmd.getName().equalsIgnoreCase("froms")) {
-      if ((p.hasPermission("BeastTP.froms")) || (p.hasPermission("BeastTP.*"))) {
-        if (args.length == 0) {
-          p.sendMessage(ChatColor.RED + "Usage: /froms [Player]");
-        } else if (args.length == 1) {
-          Player checkee = getServer().getPlayerExact(args[0]);
-          if (checkToggle(checkee) == "No") {
-            p.sendMessage(ChatColor.RED + "This player has teleportation disabled!");
+
+      sender.sendMessage(ChatColor.RED + "Couldn't find target for " + args[0]);
+      return true;
+    }if (commandLabel.equalsIgnoreCase("sfrom")) {
+      if (!canFrom((Player)sender)) {
+        sender.sendMessage(ChatColor.RED + "You are not allowed to use this BeastTP function!");
+        return true;
+      }
+
+      for (Player p : getServer().getOnlinePlayers()) {
+        if ((p.getName().toLowerCase().contains(args[0].toLowerCase())) || (p.getDisplayName().toLowerCase().contains(args[0].toLowerCase()))) {
+          if (!this.fromc.contains(p.getName())) {
+            Teleport(p, (Player)sender);
+            sender.sendMessage(ChatColor.GREEN + "Successfully teleported " + p.getDisplayName() + " to you");
           } else {
-            Player fromp = p.getServer().getPlayer(args[0]);
-            fromp.teleport(p);
-            p.sendMessage(ChatColor.GREEN + "Teleported " + ChatColor.DARK_RED + fromp.getName() + ChatColor.GREEN + "to you!");
+            s.sendMessage(ChatColor.RED + "You're not able to TP " + p.getName() + " to you because they disabled their TP!");
           }
+          return true;
         }
       }
-      else NoPerm(p);
-    }
-    else if (cmd.getName().equalsIgnoreCase("tpoff")) {
-      if ((p.hasPermission("BeastTP.tptoggle")) || (p.hasPermission("BeastTP.*"))) {
-        String onoroff = "No";
-        tpToggle(p, onoroff);
-      } else {
-        NoPerm(p);
-      }
-      p.sendMessage(ChatColor.GREEN + "Disabled players from teleporting to and from you!");
-    } else if (cmd.getName().equalsIgnoreCase("tpon")) {
-      if ((p.hasPermission("BeastTP.tptoggle")) || (p.hasPermission("BeastTP.*"))) {
-        String onoroff = "Yes";
-        tpToggle(p, onoroff);
-        p.sendMessage(ChatColor.GREEN + "Enabled players to teleport to and from you!");
-      } else {
-        NoPerm(p);
-      }
+
+      sender.sendMessage(ChatColor.RED + "Couldn't find target for " + args[0]);
+      return true;
     }
     return false;
   }
 
-  private void NoPerm(Player p) {
-    p.sendMessage(ChatColor.RED + "You don't have permission to use this!");
+  public void teleportedMessage(Player target, Player relatedPlayer, boolean to) {
+    if (to)
+      target.sendMessage(ChatColor.GREEN + relatedPlayer.getDisplayName() + " teleported to you!");
+    else
+      target.sendMessage(ChatColor.GREEN + "You were teleported to " + relatedPlayer.getDisplayName());
   }
 
-  public void tpToggle(Player p, String onoroff) {
-    YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("plugins/BeastTP/tpAllow.yml"));
-    if (onoroff == "Yes") {
-      config.set(p.getName() + ".tpAllow", "Yes");
-      try {
-        config.save("plugins/BeastTP/tpAllow.yml");
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    } else if (onoroff == "No") {
-      config.set(p.getName() + ".tpAllow", "No");
-      try {
-        config.save("plugins/BeastTP/DisableTP.yml");
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
+  public void Teleport(Player target, Player destination) {
+    target.teleport(destination);
   }
 
-  private String checkToggle(Player checkee) {
-    YamlConfiguration config = YamlConfiguration.loadConfiguration(new File("plugins/BeastTP/tpAllow.yml"));
-    return config.getString(checkee.getName() + ".tpAllow");
+  public boolean canGoTo(Player p)
+  {
+    return p.hasPermission("BeastTP.to");
+  }
+
+  public boolean canFrom(Player p)
+  {
+    return p.hasPermission("BeastTP.from");
   }
 }
